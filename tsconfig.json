@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "declaration": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "antd": ["./node_modules/antd/es/index.d.ts"],
+      "@ant-design/icons": ["./node_modules/@ant-design/icons/lib/index.d.ts"],
+      "@ant-design/pro-components": [
+        "./node_modules/@ant-design/pro-components/es/index.d.ts"
+      ],
+      "@ant-design/x": ["./node_modules/@ant-design/x/es/index.d.ts"],
+      "@ant-design/x-markdown": [
+        "./node_modules/@ant-design/x-markdown/es/index.d.ts"
+      ],
+      "@ant-design/x-sdk": ["./node_modules/@ant-design/x-sdk/es/index.d.ts"],
+      "@/*": ["./src/*"],
+      "@@/*": ["./src/.umi/*"],
+      "@@test/*": ["./src/.umi-test/*"],
+      "@root/*": ["./*"]
+    }
+  },
+  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"]
+}
