@@ -1,13 +1,10 @@
 import { Empty, Space, Tag, Timeline, Typography } from 'antd';
 import React, { memo } from 'react';
 
-import type { ITimelineMessageContent } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type { ITimelineMessageContent, TimelineItemStatus } from '../../data';
+import type { MessageComponentProps } from './types';
 
-const statusColorMap: Record<
-  NonNullable<ITimelineMessageContent['items'][number]['status']>,
-  string
-> = {
+const statusColorMap: Record<TimelineItemStatus, string> = {
   wait: 'gray',
   process: 'blue',
   finish: 'green',

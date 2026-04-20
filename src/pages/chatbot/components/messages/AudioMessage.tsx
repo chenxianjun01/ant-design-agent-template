@@ -2,7 +2,7 @@ import { Card, Empty, Space, Tag, Typography } from 'antd';
 import React, { memo } from 'react';
 
 import type { IAudioMessageContent } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 import {
   MessageActionAlert,
   MessageActionBar,

@@ -20,7 +20,7 @@ import React, { memo, useMemo } from 'react';
 import type { IChartMessageContent } from '../../data';
 import { extractChartConfigFromSchema } from '../schema/adapter';
 import SchemaSlot from '../schema/SchemaSlot';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 
 const DEFAULT_CHART_HEIGHT = 240;
 

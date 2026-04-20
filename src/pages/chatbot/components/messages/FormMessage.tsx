@@ -25,7 +25,7 @@ import {
   serializeFormValues,
 } from '../schema/formValue';
 import SchemaSlot from '../schema/SchemaSlot';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 
 const renderFieldNode = (property: SchemaProperty) => {
   const component = property['x-component'];

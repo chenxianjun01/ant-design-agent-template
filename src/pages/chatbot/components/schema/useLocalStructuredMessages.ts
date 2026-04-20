@@ -1,22 +1,27 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import type { IMessageItemDraft } from '../../data';
+import type { IMessageItem, IMessageItemDraft } from '../../data';
 import {
   appendStructuredMessage,
   clearStructuredMessagesByConversation,
   getStructuredMessagesByConversation,
   removeStructuredMessagesByConversation,
   type StructuredMessageMap,
+  updateStructuredMessageByConversation,
+  upsertStructuredMessageByConversation,
 } from './structuredMessageStore';
 
 export interface UseLocalStructuredMessagesOptions {
   conversationKey: string;
+  initialMessageMap?: StructuredMessageMap;
 }
 
 export const useLocalStructuredMessages = ({
   conversationKey,
+  initialMessageMap = {},
 }: UseLocalStructuredMessagesOptions) => {
-  const [messageMap, setMessageMap] = useState<StructuredMessageMap>({});
+  const [messageMap, setMessageMap] =
+    useState<StructuredMessageMap>(initialMessageMap);
 
   const structuredMessages = useMemo(
     () => getStructuredMessagesByConversation(messageMap, conversationKey),
@@ -38,6 +43,33 @@ export const useLocalStructuredMessages = ({
     );
   }, [conversationKey]);
 
+  const upsertStructuredMessage = useCallback(
+    (message: IMessageItemDraft) => {
+      setMessageMap((previous) =>
+        upsertStructuredMessageByConversation(
+          previous,
+          conversationKey,
+          message,
+        ),
+      );
+    },
+    [conversationKey],
+  );
+
+  const updateStructuredMessage = useCallback(
+    (messageId: string, updater: (message: IMessageItem) => IMessageItem) => {
+      setMessageMap((previous) =>
+        updateStructuredMessageByConversation(
+          previous,
+          conversationKey,
+          messageId,
+          updater,
+        ),
+      );
+    },
+    [conversationKey],
+  );
+
   const removeConversationStructuredMessages = useCallback(
     (targetConversationKey: string) => {
       setMessageMap((previous) =>
@@ -48,8 +80,11 @@ export const useLocalStructuredMessages = ({
   );
 
   return {
+    messageMap,
     structuredMessages,
     insertStructuredMessage,
+    upsertStructuredMessage,
+    updateStructuredMessage,
     clearStructuredMessages,
     removeConversationStructuredMessages,
   };

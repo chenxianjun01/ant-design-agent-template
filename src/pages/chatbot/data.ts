@@ -1,4 +1,5 @@
 import type { TablePaginationConfig } from 'antd';
+import type { MockChartType, MockMessageType } from './service';
 
 export interface ConversationItem {
   key: string;
@@ -6,6 +7,9 @@ export interface ConversationItem {
   group?: string;
   isDraft?: boolean;
   updatedAt?: string;
+  starterPrompt?: string;
+  starterMockType?: MockMessageType;
+  starterMockChartType?: MockChartType;
 }
 
 export enum MessageType {
@@ -19,34 +23,35 @@ export enum MessageType {
   MAP = 'map',
   TIMELINE = 'timeline',
   APPROVAL = 'approval',
+  AGENT_EXECUTION = 'agent-execution',
 }
 
 export type MessageRole = 'user' | 'assistant' | 'system';
 
 export type MessageSchema = Record<string, unknown>;
+export type MessageTableValueType =
+  | 'text'
+  | 'digit'
+  | 'percent'
+  | 'dateTime'
+  | 'tag';
+export type MessageActionButtonType =
+  | 'primary'
+  | 'default'
+  | 'dashed'
+  | 'link'
+  | 'text';
+export type TimelineItemStatus = 'wait' | 'process' | 'finish' | 'error';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'processing';
+export type AgentExecutionStatus = 'running' | 'success' | 'error';
+export type AgentExecutionStepStatus = 'wait' | 'running' | 'success' | 'error';
+export type AgentExecutionControlAction = 'stop' | 'retry' | 'continue';
 
 export interface IFormSubmitActionRequest {
   action: 'request';
   promptTemplate?: string;
-  mockType?:
-    | 'text'
-    | 'file'
-    | 'image'
-    | 'audio'
-    | 'table'
-    | 'chart'
-    | 'form'
-    | 'map'
-    | 'timeline'
-    | 'approval';
-  mockChartType?:
-    | 'line'
-    | 'column'
-    | 'pie'
-    | 'area'
-    | 'bar'
-    | 'radar'
-    | 'dualAxes';
+  mockType?: MockMessageType;
+  mockChartType?: MockChartType;
 }
 
 export interface IFormSubmitActionInsertMessage {
@@ -57,25 +62,8 @@ export interface IFormSubmitActionInsertMessage {
 export interface IFormSubmitActionRequestAndInsert {
   action: 'requestAndInsert';
   promptTemplate?: string;
-  mockType?:
-    | 'text'
-    | 'file'
-    | 'image'
-    | 'audio'
-    | 'table'
-    | 'chart'
-    | 'form'
-    | 'map'
-    | 'timeline'
-    | 'approval';
-  mockChartType?:
-    | 'line'
-    | 'column'
-    | 'pie'
-    | 'area'
-    | 'bar'
-    | 'radar'
-    | 'dualAxes';
+  mockType?: MockMessageType;
+  mockChartType?: MockChartType;
   message: IMessageItemDraft;
 }
 
@@ -90,25 +78,8 @@ export interface IFormSubmitActionCallApi {
   onSuccessMessage?: IMessageItemDraft;
   onErrorMessage?: IMessageItemDraft;
   successPromptTemplate?: string;
-  mockType?:
-    | 'text'
-    | 'file'
-    | 'image'
-    | 'audio'
-    | 'table'
-    | 'chart'
-    | 'form'
-    | 'map'
-    | 'timeline'
-    | 'approval';
-  mockChartType?:
-    | 'line'
-    | 'column'
-    | 'pie'
-    | 'area'
-    | 'bar'
-    | 'radar'
-    | 'dualAxes';
+  mockType?: MockMessageType;
+  mockChartType?: MockChartType;
 }
 
 export interface IFormSubmitActionHookInsertMessage {
@@ -119,25 +90,8 @@ export interface IFormSubmitActionHookInsertMessage {
 export interface IFormSubmitActionHookRequest {
   type: 'request';
   promptTemplate: string;
-  mockType?:
-    | 'text'
-    | 'file'
-    | 'image'
-    | 'audio'
-    | 'table'
-    | 'chart'
-    | 'form'
-    | 'map'
-    | 'timeline'
-    | 'approval';
-  mockChartType?:
-    | 'line'
-    | 'column'
-    | 'pie'
-    | 'area'
-    | 'bar'
-    | 'radar'
-    | 'dualAxes';
+  mockType?: MockMessageType;
+  mockChartType?: MockChartType;
 }
 
 export interface IFormSubmitActionHookClearStructuredMessages {
@@ -174,7 +128,7 @@ export interface IMessageTableColumn {
   width?: number | string;
   ellipsis?: boolean;
   align?: 'left' | 'center' | 'right';
-  valueType?: 'text' | 'digit' | 'percent' | 'dateTime' | 'tag';
+  valueType?: MessageTableValueType;
 }
 
 export interface ITextMessageContent {
@@ -243,7 +197,7 @@ export interface ITableMessageContent {
 export interface IChartMessageContent {
   title?: string;
   description?: string;
-  type: 'line' | 'column' | 'pie' | 'area' | 'bar' | 'radar' | 'dualAxes';
+  type: MockChartType;
   data: Record<string, unknown>[] | Record<string, unknown>[][];
   xField?: string;
   yField?: string | string[];
@@ -286,7 +240,7 @@ export interface ITimelineMessageItem {
   description?: string;
   time?: string;
   color?: 'blue' | 'red' | 'green' | 'gray';
-  status?: 'wait' | 'process' | 'finish' | 'error';
+  status?: TimelineItemStatus;
   tags?: string[];
 }
 
@@ -306,7 +260,7 @@ export interface IApprovalMessageField {
 export interface IMessageAction {
   key?: string;
   label: string;
-  buttonType?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  buttonType?: MessageActionButtonType;
   danger?: boolean;
   submitAction: IFormSubmitAction;
   values?: Record<string, unknown>;
@@ -318,12 +272,72 @@ export interface IApprovalMessageContent {
   title: string;
   description?: string;
   summary?: string;
-  status?: 'pending' | 'approved' | 'rejected' | 'processing';
+  status?: ApprovalStatus;
   applicant?: string;
   approver?: string;
   tags?: string[];
   fields?: IApprovalMessageField[];
   actions?: IApprovalMessageAction[];
+}
+
+export interface IAgentExecutionStep {
+  key?: string;
+  title: string;
+  description?: string;
+  status: AgentExecutionStepStatus;
+  startedAt?: string;
+  finishedAt?: string;
+  duration?: string;
+  tags?: string[];
+}
+
+export interface IAgentExecutionControl {
+  key: string;
+  label: string;
+  action: AgentExecutionControlAction;
+  buttonType?: MessageActionButtonType;
+  danger?: boolean;
+  disabled?: boolean;
+}
+
+export interface IAgentExecutionMessageContent {
+  title: string;
+  description?: string;
+  summary?: string;
+  status: AgentExecutionStatus;
+  startedAt?: string;
+  updatedAt?: string;
+  steps: IAgentExecutionStep[];
+  controls?: IAgentExecutionControl[];
+  pendingControlKey?: string;
+  controlErrorMessage?: string;
+}
+
+export interface IAgentExecutionStepPatch {
+  key: string;
+  title?: string;
+  description?: string;
+  status?: IAgentExecutionStep['status'];
+  startedAt?: string;
+  finishedAt?: string;
+  duration?: string;
+  tags?: string[];
+}
+
+export interface IAgentExecutionMessagePatch {
+  description?: string;
+  summary?: string;
+  status?: IAgentExecutionMessageContent['status'];
+  startedAt?: string;
+  updatedAt?: string;
+  controls?: IAgentExecutionControl[];
+  pendingControlKey?: string;
+  clearPendingControl?: boolean;
+  controlErrorMessage?: string;
+  clearControlError?: boolean;
+  replaceSteps?: IAgentExecutionStep[];
+  appendSteps?: IAgentExecutionStep[];
+  updateSteps?: IAgentExecutionStepPatch[];
 }
 
 export type IMessageContent =
@@ -336,7 +350,8 @@ export type IMessageContent =
   | IFormMessageContent
   | IMapMessageContent
   | ITimelineMessageContent
-  | IApprovalMessageContent;
+  | IApprovalMessageContent
+  | IAgentExecutionMessageContent;
 
 export interface IMessageItem {
   id: string;
@@ -417,6 +432,16 @@ const isValidMessageContent = (
 
   if (type === MessageType.APPROVAL) {
     return typeof content.title === 'string';
+  }
+
+  if (type === MessageType.AGENT_EXECUTION) {
+    return (
+      typeof content.title === 'string' &&
+      Array.isArray(content.steps) &&
+      (content.status === 'running' ||
+        content.status === 'success' ||
+        content.status === 'error')
+    );
   }
 
   return false;
@@ -553,6 +578,49 @@ export const normalizeStructuredMessage = (
     content: content as IMessageContent,
     schema: isObjectRecord(schema) ? schema : undefined,
   });
+};
+
+export const applyAgentExecutionMessagePatch = (
+  message: IMessageItem,
+  patch: IAgentExecutionMessagePatch,
+): IMessageItem => {
+  if (message.type !== MessageType.AGENT_EXECUTION) {
+    return message;
+  }
+
+  const content = message.content as IAgentExecutionMessageContent;
+  const stepPatchMap = new Map(
+    (patch.updateSteps ?? []).map((stepPatch) => [stepPatch.key, stepPatch]),
+  );
+  const steps =
+    patch.replaceSteps ??
+    content.steps.map((step) => {
+      const stepPatch = step.key ? stepPatchMap.get(step.key) : undefined;
+
+      return stepPatch ? { ...step, ...stepPatch } : step;
+    });
+  const nextPendingControlKey = patch.clearPendingControl
+    ? undefined
+    : (patch.pendingControlKey ?? content.pendingControlKey);
+  const nextControlErrorMessage = patch.clearControlError
+    ? undefined
+    : (patch.controlErrorMessage ?? content.controlErrorMessage);
+
+  return {
+    ...message,
+    content: {
+      ...content,
+      description: patch.description ?? content.description,
+      summary: patch.summary ?? content.summary,
+      status: patch.status ?? content.status,
+      startedAt: patch.startedAt ?? content.startedAt,
+      updatedAt: patch.updatedAt ?? content.updatedAt,
+      controls: patch.controls ?? content.controls,
+      pendingControlKey: nextPendingControlKey,
+      controlErrorMessage: nextControlErrorMessage,
+      steps: [...steps, ...(patch.appendSteps ?? [])],
+    },
+  };
 };
 
 export type ParsedMessage =

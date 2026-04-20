@@ -2,7 +2,7 @@ import { Card, Empty, Image, Space, Typography } from 'antd';
 import React, { memo } from 'react';
 
 import type { IImageMessageContent } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 import {
   MessageActionAlert,
   MessageActionBar,

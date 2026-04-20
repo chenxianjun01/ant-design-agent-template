@@ -104,6 +104,16 @@ jest.mock('./messages/ApprovalMessage', () => ({
     ),
 }));
 
+jest.mock('./messages/AgentExecutionMessage', () => ({
+  __esModule: true,
+  default: () =>
+    require('react').createElement(
+      'div',
+      { 'data-testid': 'agent-execution-message' },
+      'agent-execution-message',
+    ),
+}));
+
 jest.mock('./messages/UnsupportedMessage', () => ({
   __esModule: true,
   default: (props: { message: { type: string } }) => {
@@ -135,7 +145,9 @@ const createMessage = (type: string) => {
                     ? { items: [] }
                     : type === MessageType.APPROVAL
                       ? { title: 'approval' }
-                      : { title: 'form' };
+                      : type === MessageType.AGENT_EXECUTION
+                        ? { title: 'execution', status: 'running', steps: [] }
+                        : { title: 'form' };
 
   return {
     id: `message-${String(type)}`,
@@ -214,6 +226,16 @@ describe('MessageRenderer', () => {
     );
 
     expect(screen.getByTestId('approval-message')).toBeTruthy();
+  });
+
+  it('renders agent execution component for agent-execution message type', () => {
+    render(
+      React.createElement(MessageRenderer, {
+        message: createMessage(MessageType.AGENT_EXECUTION),
+      }),
+    );
+
+    expect(screen.getByTestId('agent-execution-message')).toBeTruthy();
   });
 
   it('falls back to unsupported component for unknown message type', () => {

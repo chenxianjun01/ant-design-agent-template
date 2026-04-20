@@ -2,7 +2,7 @@ import { Button, Card, Empty, List, Space, Tag, Typography } from 'antd';
 import React, { memo } from 'react';
 
 import type { IFileMessageContent } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 import {
   MessageActionAlert,
   MessageActionBar,

@@ -2,28 +2,26 @@ import type { DescriptionsProps } from 'antd';
 import { Card, Descriptions, Empty, Space, Tag, Typography } from 'antd';
 import React, { memo, useMemo } from 'react';
 
-import type { IApprovalMessageContent, IFormSubmitAction } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type {
+  ApprovalStatus,
+  IApprovalMessageContent,
+  IFormSubmitAction,
+} from '../../data';
+import type { MessageComponentProps } from './types';
 import {
   MessageActionAlert,
   MessageActionBar,
   useMessageActionExecution,
 } from './useMessageActionExecution';
 
-const statusLabelMap: Record<
-  NonNullable<IApprovalMessageContent['status']>,
-  string
-> = {
+const statusLabelMap: Record<ApprovalStatus, string> = {
   pending: '待审批',
   approved: '已通过',
   rejected: '已拒绝',
   processing: '处理中',
 };
 
-const statusColorMap: Record<
-  NonNullable<IApprovalMessageContent['status']>,
-  string
-> = {
+const statusColorMap: Record<ApprovalStatus, string> = {
   pending: 'gold',
   approved: 'green',
   rejected: 'red',

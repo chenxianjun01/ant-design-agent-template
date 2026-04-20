@@ -21,7 +21,7 @@ import {
   type MessageSchema,
   MessageType,
 } from '../../data';
-import type { FormSubmitExecutionResult } from './formSubmitAction';
+import type { FormSubmitHandler } from '../../types';
 import { normalizeInitialValues, serializeFormValues } from './formValue';
 
 export interface SchemaSlotProps {
@@ -31,10 +31,7 @@ export interface SchemaSlotProps {
     schema: MessageSchema,
     message: IMessageItem,
   ) => React.ReactNode;
-  onFormSubmit?: (
-    message: IMessageItem,
-    values: Record<string, unknown>,
-  ) => void | Promise<FormSubmitExecutionResult>;
+  onFormSubmit?: FormSubmitHandler;
 }
 
 const SchemaField = createSchemaField({

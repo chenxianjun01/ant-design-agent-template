@@ -1,7 +1,7 @@
 import { Alert } from 'antd';
 import React, { memo } from 'react';
 
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 
 const UnsupportedMessage: React.FC<MessageComponentProps> = ({ message }) => {
   return (

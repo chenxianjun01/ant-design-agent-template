@@ -3,17 +3,13 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import React, { memo, useMemo } from 'react';
 
-import type {
-  IMessageItem,
-  IMessageTableColumn,
-  ITableMessageContent,
-} from '../../data';
+import type { IMessageTableColumn, ITableMessageContent } from '../../data';
 import {
   extractTableColumnsFromSchema,
   isObjectRecord,
 } from '../schema/adapter';
 import SchemaSlot from '../schema/SchemaSlot';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 
 const inferColumnsFromData = (
   dataSource: Record<string, unknown>[],

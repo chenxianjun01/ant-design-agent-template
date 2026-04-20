@@ -6,11 +6,12 @@ import type {
   IMessageAction,
   IMessageItem,
 } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type { FormSubmitHandler } from '../../types';
+import type { MessageActionAlertProps, MessageActionExecutor } from './types';
 
 export interface MessageActionExecutionOptions {
   message: IMessageItem;
-  onFormSubmit?: MessageComponentProps['onFormSubmit'];
+  onFormSubmit?: FormSubmitHandler;
 }
 
 export const useMessageActionExecution = ({
@@ -21,10 +22,10 @@ export const useMessageActionExecution = ({
   const [submitError, setSubmitError] = useState<string>();
   const [retryable, setRetryable] = useState(true);
 
-  const executeAction = async (
-    action: IMessageAction,
-    actionKey: string,
-    baseValues?: Record<string, unknown>,
+  const executeAction: MessageActionExecutor = async (
+    action,
+    actionKey,
+    baseValues,
   ) => {
     setSubmittingKey(actionKey);
     setSubmitError(undefined);
@@ -74,11 +75,7 @@ export const useMessageActionExecution = ({
 export interface MessageActionBarProps {
   actions?: IMessageAction[];
   baseValues?: Record<string, unknown>;
-  executeAction: (
-    action: IMessageAction,
-    actionKey: string,
-    baseValues?: Record<string, unknown>,
-  ) => Promise<boolean>;
+  executeAction: MessageActionExecutor;
   retryable: boolean;
   submittingKey?: string;
 }
@@ -120,5 +117,6 @@ export const MessageActionBar: React.FC<MessageActionBarProps> = ({
   );
 };
 
-export const MessageActionAlert: React.FC<{ error?: string }> = ({ error }) =>
-  error ? <Alert showIcon type="error" message={error} /> : null;
+export const MessageActionAlert: React.FC<MessageActionAlertProps> = ({
+  error,
+}) => (error ? <Alert showIcon type="error" message={error} /> : null);

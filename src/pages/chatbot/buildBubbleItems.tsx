@@ -3,8 +3,8 @@ import type { BubbleItemType } from '@ant-design/x/es/bubble/interface';
 import React from 'react';
 
 import MessageRenderer from './components/MessageRenderer';
-import type { FormSubmitExecutionResult } from './components/schema/formSubmitAction';
 import type { IMessageItem, ParsedMessage } from './data';
+import type { AgentExecutionControlHandler, FormSubmitHandler } from './types';
 
 interface ParsedChatRecord {
   id: string | number;
@@ -16,10 +16,8 @@ interface BuildBubbleItemsOptions {
   activeKey: string;
   parsedMessages: ParsedChatRecord[];
   structuredMessages: IMessageItem[];
-  onFormSubmit: (
-    submittedMessage: IMessageItem,
-    values: Record<string, unknown>,
-  ) => void | Promise<FormSubmitExecutionResult>;
+  onFormSubmit: FormSubmitHandler;
+  onAgentExecutionControl?: AgentExecutionControlHandler;
 }
 
 export const buildBubbleItems = ({
@@ -27,13 +25,30 @@ export const buildBubbleItems = ({
   parsedMessages,
   structuredMessages,
   onFormSubmit,
-}: BuildBubbleItemsOptions): BubbleItemType[] =>
-  [
-    ...parsedMessages.map((msg) => ({ kind: 'chat' as const, msg })),
-    ...structuredMessages.map((message, index) => ({
+  onAgentExecutionControl,
+}: BuildBubbleItemsOptions): BubbleItemType[] => {
+  const localStructuredMessageIds = new Set(
+    structuredMessages.map((item) => item.id),
+  );
+
+  return [
+    ...parsedMessages
+      .filter((msg) => {
+        const structuredMessage =
+          msg.message.role === 'assistant'
+            ? msg.message.structuredMessage
+            : undefined;
+
+        return !(
+          structuredMessage &&
+          localStructuredMessageIds.has(structuredMessage.id)
+        );
+      })
+      .map((msg) => ({ kind: 'chat' as const, msg })),
+    ...structuredMessages.map((message) => ({
       kind: 'local-structured' as const,
       message,
-      key: `local-structured_${activeKey}_${index}`,
+      key: `local-structured_${activeKey}_${message.id}`,
     })),
   ].map((entry) => {
     if (entry.kind === 'local-structured') {
@@ -44,6 +59,7 @@ export const buildBubbleItems = ({
           <MessageRenderer
             message={entry.message}
             onFormSubmit={onFormSubmit}
+            onAgentExecutionControl={onAgentExecutionControl}
           />
         ),
         status: 'success',
@@ -70,6 +86,7 @@ export const buildBubbleItems = ({
         <MessageRenderer
           message={structuredMessage}
           onFormSubmit={onFormSubmit}
+          onAgentExecutionControl={onAgentExecutionControl}
         />
       ) : (
         parsed.content
@@ -84,3 +101,4 @@ export const buildBubbleItems = ({
 
     return item;
   });
+};

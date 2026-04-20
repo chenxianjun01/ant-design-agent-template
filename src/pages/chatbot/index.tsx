@@ -8,79 +8,39 @@ import type {
 import XMarkdown from '@ant-design/x-markdown';
 import { useXChat } from '@ant-design/x-sdk';
 import { Avatar, Card, Segmented, Space, Tag, Typography } from 'antd';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { buildBubbleItems } from './buildBubbleItems';
 import {
-  buildRequestParams,
-  executeFormSubmitAction,
-} from './components/schema/formSubmitAction';
+  loadChatbotWorkspaceSnapshot,
+  type PersistedParsedChatRecord,
+} from './chatPersistence';
+import RuntimeDebugPanel from './components/RuntimeDebugPanel';
 import useLocalStructuredMessages from './components/schema/useLocalStructuredMessages';
 import {
-  applySentMessageToConversation,
-  createDraftConversation,
-  deleteConversationItem,
-  refreshConversationItem,
-} from './conversationHelpers';
-import type { ConversationItem, IMessageItem, ParsedMessage } from './data';
+  DEFAULT_ACTIVE_KEY,
+  DEFAULT_CONVERSATIONS,
+} from './conversationPresets';
+import type { ConversationItem, ParsedMessage } from './data';
 import { parseChatMessage } from './parser';
 import {
-  CHAT_PROVIDER_MODE,
   type ChatMessage,
   type ChatRequestParams,
   createChatProvider,
   createSubmitActionAdapter,
-  MOCK_CHART_TYPES,
-  MOCK_MESSAGE_TYPES,
   type MockChartType,
   type MockMessageType,
 } from './service';
 import { useStyles } from './style';
+import { useChatActions } from './useChatActions';
+import { useChatMessagePersistence } from './useChatMessagePersistence';
+import { useConversationController } from './useConversationController';
+import { useMockToolbar } from './useMockToolbar';
+import { useRuntimeExecutionSync } from './useRuntimeExecutionSync';
+import { useStarterPromptBootstrap } from './useStarterPromptBootstrap';
+import { useWorkspaceSnapshotPersistence } from './useWorkspaceSnapshotPersistence';
 
 const WELCOME_TEXT = '🤖 你好，有什么可以帮你？';
-
-const MOCK_MESSAGE_TYPE_META: Record<MockMessageType, { label: string }> = {
-  text: {
-    label: '文本',
-  },
-  file: {
-    label: '文件',
-  },
-  image: {
-    label: '图片',
-  },
-  audio: {
-    label: '音频',
-  },
-  table: {
-    label: '表格',
-  },
-  chart: {
-    label: '图表',
-  },
-  form: {
-    label: '表单',
-  },
-  map: {
-    label: '地图',
-  },
-  timeline: {
-    label: '时间轴',
-  },
-  approval: {
-    label: '审批',
-  },
-};
-
-const MOCK_CHART_TYPE_META: Record<MockChartType, string> = {
-  line: '折线图',
-  column: '柱状图',
-  pie: '饼图',
-  area: '面积图',
-  bar: '条形图',
-  radar: '雷达图',
-  dualAxes: '双轴图',
-};
 
 const TypewriterTitle: React.FC = () => {
   const { styles } = useStyles();
@@ -153,61 +113,47 @@ const roleConfig: BubbleListProps['role'] = {
 
 const ChatbotPage: React.FC = () => {
   const { styles } = useStyles();
+  const initialSnapshotRef = useRef(loadChatbotWorkspaceSnapshot());
 
-  const [conversations, setConversations] = useState<ConversationItem[]>([
-    { key: 'default', label: '💬 新对话', group: '今天', isDraft: true },
-    {
-      key: 'preset-1',
-      label: '🧩 Ant Design 的 Form 表单如何做联动校验？',
-      group: '今天',
-    },
-    {
-      key: 'preset-2',
-      label: '📋 ProTable 如何自定义工具栏按钮？',
-      group: '今天',
-    },
-    {
-      key: 'preset-3',
-      label: '🎨 如何用 antd-style 实现暗色主题切换？',
-      group: '昨天',
-    },
-    {
-      key: 'preset-4',
-      label: '🗂️ ProLayout 侧边菜单如何动态生成？',
-      group: '昨天',
-    },
-    {
-      key: 'preset-5',
-      label: '📊 Ant Design Charts 折线图数据格式',
-      group: '昨天',
-    },
-    {
-      key: 'preset-6',
-      label: '🚀 Ant Design Pro 如何接入后端权限系统？',
-      group: '更早',
-    },
-    {
-      key: 'preset-7',
-      label: '🔍 ProForm 中 Select 远程搜索怎么实现？',
-      group: '更早',
-    },
-    {
-      key: 'preset-8',
-      label: '⚙️ Ant Design Token 定制主题最佳实践',
-      group: '更早',
-    },
-  ]);
-  const [activeKey, setActiveKey] = useState<string>('default');
+  const [conversations, setConversations] = useState<ConversationItem[]>(
+    initialSnapshotRef.current?.conversations?.length
+      ? initialSnapshotRef.current.conversations
+      : DEFAULT_CONVERSATIONS,
+  );
+  const [activeKey, setActiveKey] = useState<string>(() => {
+    const snapshot = initialSnapshotRef.current;
+    const candidateKey = snapshot?.activeKey;
+    const availableKeys = new Set(
+      snapshot?.conversations?.map((conversation) => conversation.key) ??
+        DEFAULT_CONVERSATIONS.map((conversation) => conversation.key),
+    );
+
+    return candidateKey && availableKeys.has(candidateKey)
+      ? candidateKey
+      : DEFAULT_ACTIVE_KEY;
+  });
   const [inputValue, setInputValue] = useState('');
-  const [mockType, setMockType] = useState<MockMessageType>('text');
-  const [mockChartType, setMockChartType] = useState<MockChartType>('line');
+  const [mockType, setMockType] = useState<MockMessageType>(
+    initialSnapshotRef.current?.mockType ?? 'text',
+  );
+  const [mockChartType, setMockChartType] = useState<MockChartType>(
+    initialSnapshotRef.current?.mockChartType ?? 'line',
+  );
+  const [bootstrappedConversationKeys, setBootstrappedConversationKeys] =
+    useState<Record<string, true>>(
+      initialSnapshotRef.current?.bootstrappedConversationKeys ?? {},
+    );
   const {
+    messageMap,
     structuredMessages,
     insertStructuredMessage,
+    upsertStructuredMessage,
+    updateStructuredMessage,
     clearStructuredMessages,
     removeConversationStructuredMessages,
   } = useLocalStructuredMessages({
     conversationKey: activeKey,
+    initialMessageMap: initialSnapshotRef.current?.structuredMessageMap,
   });
   const submitActionAdapter = useMemo(() => createSubmitActionAdapter(), []);
 
@@ -223,81 +169,97 @@ const ChatbotPage: React.FC = () => {
     parser: parseChatMessage,
     requestPlaceholder: { role: 'assistant', content: '' },
   });
+  const { chatMessageMap, setChatMessageMap } = useChatMessagePersistence({
+    activeKey,
+    initialChatMessageMap: initialSnapshotRef.current?.chatMessageMap,
+    parsedMessages: parsedMessages as PersistedParsedChatRecord[],
+  });
+  const displayedParsedMessages =
+    parsedMessages.length > 0 || isRequesting
+      ? parsedMessages
+      : (chatMessageMap[activeKey] ?? []);
+  const { runtimeEvents, recordRuntimeEvent } = useRuntimeExecutionSync({
+    activeKey,
+    parsedMessages: parsedMessages as PersistedParsedChatRecord[],
+    structuredMessages,
+    upsertStructuredMessage,
+    updateStructuredMessage,
+  });
+  useWorkspaceSnapshotPersistence({
+    activeKey,
+    bootstrappedConversationKeys,
+    chatMessageMap,
+    conversations,
+    mockChartType,
+    mockType,
+    structuredMessageMap: messageMap,
+  });
+  const {
+    handleAgentExecutionControl,
+    handleFormSubmit,
+    handleSenderSubmit,
+    sendMessage,
+  } = useChatActions({
+    activeKey,
+    clearStructuredMessages,
+    insertStructuredMessage,
+    mockChartType,
+    mockType,
+    onRequest,
+    recordRuntimeEvent,
+    setConversations,
+    setInputValue,
+    submitActionAdapter,
+    updateStructuredMessage,
+  });
+  const { getConversationMenu, newChat } = useConversationController({
+    activeKey,
+    setActiveKey,
+    setChatMessageMap,
+    setConversations,
+    removeConversationStructuredMessages,
+  });
 
-  const handleFormSubmit = (
-    submittedMessage: IMessageItem,
-    values: Record<string, unknown>,
-  ) => {
-    return executeFormSubmitAction({
-      isRemoteMode: CHAT_PROVIDER_MODE === 'remote',
-      submittedMessage,
-      values,
-      insertStructuredMessage,
-      clearStructuredMessages,
-      refreshConversation: () => {
-        const refreshedAt = new Date().toISOString();
-        setConversations((previous) =>
-          refreshConversationItem(previous, activeKey, refreshedAt),
-        );
-      },
-      onRequest,
-      submitActionAdapter,
-    });
-  };
-
-  const sendMessage = (
-    content: string,
-    options?: {
-      mockType?: MockMessageType;
-      mockChartType?: MockChartType;
-    },
-  ) => {
-    setInputValue('');
-    const sentAt = new Date().toISOString();
-    setConversations((prev) =>
-      applySentMessageToConversation(prev, activeKey, content, sentAt),
-    );
-    onRequest(
-      buildRequestParams({
-        isRemoteMode: CHAT_PROVIDER_MODE === 'remote',
-        messages: [{ role: 'user', content }],
-        mockType: options?.mockType,
-        mockChartType: options?.mockChartType,
-      }),
-    );
-  };
-
-  const handleSenderSubmit = (content: string) => {
-    sendMessage(content, {
-      mockType,
-      mockChartType: mockType === 'chart' ? mockChartType : undefined,
-    });
-  };
-
-  const newChat = () => {
-    const key = crypto.randomUUID();
-    setConversations((prev) => [createDraftConversation(key), ...prev]);
-    setActiveKey(key);
-  };
+  useStarterPromptBootstrap({
+    activeKey,
+    bootstrappedConversationKeys,
+    conversations,
+    displayedParsedMessagesLength: displayedParsedMessages.length,
+    isRequesting,
+    mockType,
+    sendMessage,
+    setBootstrappedConversationKeys,
+    structuredMessagesLength: structuredMessages.length,
+  });
 
   const bubbleItems = useMemo<BubbleItemType[]>(
     () =>
       buildBubbleItems({
         activeKey,
-        parsedMessages,
+        parsedMessages: displayedParsedMessages,
         structuredMessages,
         onFormSubmit: handleFormSubmit,
+        onAgentExecutionControl: handleAgentExecutionControl,
       }),
-    [activeKey, parsedMessages, structuredMessages],
+    [
+      activeKey,
+      displayedParsedMessages,
+      handleAgentExecutionControl,
+      structuredMessages,
+    ],
   );
 
-  const hasMessages = parsedMessages.length > 0;
-  const showMockToolbar = CHAT_PROVIDER_MODE !== 'remote';
-  const currentMockTypeLabel =
-    mockType === 'chart'
-      ? `${MOCK_MESSAGE_TYPE_META[mockType].label} · ${MOCK_CHART_TYPE_META[mockChartType]}`
-      : MOCK_MESSAGE_TYPE_META[mockType].label;
-
+  const hasMessages =
+    displayedParsedMessages.length > 0 || structuredMessages.length > 0;
+  const {
+    currentMockTypeLabel,
+    mockChartTypeOptions,
+    mockMessageTypeOptions,
+    showMockToolbar,
+  } = useMockToolbar({
+    mockChartType,
+    mockType,
+  });
   return (
     <PageContainer
       ghost
@@ -335,23 +297,7 @@ const ChatbotPage: React.FC = () => {
                 activeKey={activeKey}
                 onActiveChange={setActiveKey}
                 groupable
-                menu={(conversation) => ({
-                  items: [{ key: 'delete', label: '删除', danger: true }],
-                  onClick: ({ key }) => {
-                    if (key === 'delete') {
-                      removeConversationStructuredMessages(conversation.key);
-                      setConversations((prev) => {
-                        const next = deleteConversationItem(
-                          prev,
-                          conversation.key,
-                          activeKey,
-                        );
-                        setActiveKey(next.nextActiveKey);
-                        return next.conversations;
-                      });
-                    }
-                  },
-                })}
+                menu={getConversationMenu}
                 creation={{ onClick: newChat, label: '新建对话' }}
               />
             </div>
@@ -372,8 +318,16 @@ const ChatbotPage: React.FC = () => {
                 className={hasMessages ? styles.footer : styles.footerCenter}
               >
                 {!hasMessages && (
-                  <div className={styles.welcomeTitle}>
-                    <TypewriterTitle />
+                  <div className={styles.emptyState}>
+                    <div className={styles.welcomeTitle}>
+                      <TypewriterTitle />
+                    </div>
+                    <Typography.Paragraph
+                      type="secondary"
+                      className={styles.welcomeDescription}
+                    >
+                      这里是前端智能体联调工作台。可以直接输入问题，验证结构化消息、执行态更新、表单和动作编排链路。
+                    </Typography.Paragraph>
                   </div>
                 )}
                 {showMockToolbar && (
@@ -387,10 +341,7 @@ const ChatbotPage: React.FC = () => {
                         size="small"
                         value={mockType}
                         onChange={(value) => setMockType(value)}
-                        options={MOCK_MESSAGE_TYPES.map((type) => ({
-                          label: MOCK_MESSAGE_TYPE_META[type].label,
-                          value: type,
-                        }))}
+                        options={mockMessageTypeOptions}
                       />
                       {mockType === 'chart' && (
                         <>
@@ -401,16 +352,16 @@ const ChatbotPage: React.FC = () => {
                             size="small"
                             value={mockChartType}
                             onChange={(value) => setMockChartType(value)}
-                            options={MOCK_CHART_TYPES.map((type) => ({
-                              label: MOCK_CHART_TYPE_META[type],
-                              value: type,
-                            }))}
+                            options={mockChartTypeOptions}
                           />
                         </>
                       )}
                     </Space>
                   </div>
                 )}
+                <div className={styles.debugPanel}>
+                  <RuntimeDebugPanel events={runtimeEvents} />
+                </div>
                 <Sender
                   value={inputValue}
                   onChange={setInputValue}

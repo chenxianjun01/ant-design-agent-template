@@ -6,6 +6,10 @@ export const useStyles = createStyles(({ css, token }) => ({
     display: flex;
     flex: 1;
     overflow: hidden;
+
+    @media (max-width: 960px) {
+      flex-direction: column;
+    }
   `,
 
   sidebar: css`
@@ -15,6 +19,13 @@ export const useStyles = createStyles(({ css, token }) => ({
     display: flex;
     flex-direction: column;
     overflow: hidden;
+
+    @media (max-width: 960px) {
+      width: 100%;
+      max-height: 240px;
+      border-right: none;
+      border-bottom: 1px solid ${token.colorBorderSecondary};
+    }
   `,
 
   main: css`
@@ -55,8 +66,16 @@ export const useStyles = createStyles(({ css, token }) => ({
     align-items: center;
     justify-content: center;
     padding: ${token.paddingLG}px;
-    gap: 32px;
-    margin-top: -10%;
+    gap: 24px;
+  `,
+
+  emptyState: css`
+    width: 100%;
+    max-width: 940px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: ${token.paddingLG}px;
   `,
 
   welcomeTitle: css`
@@ -64,6 +83,13 @@ export const useStyles = createStyles(({ css, token }) => ({
     font-weight: 600;
     color: ${token.colorText};
     text-align: center;
+  `,
+
+  welcomeDescription: css`
+    max-width: 720px;
+    margin-bottom: 0;
+    text-align: center;
+    font-size: 15px;
   `,
 
   cursor: css`
@@ -82,5 +108,10 @@ export const useStyles = createStyles(({ css, token }) => ({
     border: 1px solid ${token.colorBorderSecondary};
     border-radius: ${token.borderRadiusLG}px;
     background: ${token.colorFillQuaternary};
+  `,
+
+  debugPanel: css`
+    width: 100%;
+    max-width: 940px;
   `,
 }));

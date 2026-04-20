@@ -7,8 +7,13 @@ import {
   type XRequestOptions,
 } from '@ant-design/x-sdk';
 import { request } from '@umijs/max';
+import type {
+  IAgentExecutionControl,
+  IAgentExecutionMessagePatch,
+} from './data';
 
 import {
+  createMockAgentExecutionPayload,
   createMockApprovalPayload,
   createMockAudioPayload,
   createMockChartPayload,
@@ -37,6 +42,7 @@ export const MOCK_MESSAGE_TYPES = [
   'map',
   'timeline',
   'approval',
+  'agent-execution',
 ] as const;
 export const MOCK_CHART_TYPES = [
   'line',
@@ -50,6 +56,38 @@ export const MOCK_CHART_TYPES = [
 
 export type MockMessageType = (typeof MOCK_MESSAGE_TYPES)[number];
 export type MockChartType = (typeof MOCK_CHART_TYPES)[number];
+
+export const MOCK_MESSAGE_TYPE_LABELS: Record<MockMessageType, string> = {
+  text: '文本',
+  file: '文件',
+  image: '图片',
+  audio: '音频',
+  table: '表格',
+  chart: '图表',
+  form: '表单',
+  map: '地图',
+  timeline: '时间轴',
+  approval: '审批',
+  'agent-execution': '执行态',
+};
+
+export const MOCK_CHART_TYPE_LABELS: Record<MockChartType, string> = {
+  line: '折线图',
+  column: '柱状图',
+  pie: '饼图',
+  area: '面积图',
+  bar: '条形图',
+  radar: '雷达图',
+  dualAxes: '双轴图',
+};
+
+export const isMockMessageType = (type: unknown): type is MockMessageType =>
+  typeof type === 'string' &&
+  (MOCK_MESSAGE_TYPES as readonly string[]).includes(type);
+
+export const isMockChartType = (type: unknown): type is MockChartType =>
+  typeof type === 'string' &&
+  (MOCK_CHART_TYPES as readonly string[]).includes(type);
 
 export interface ChatRequestParams {
   messages: ChatMessage[];
@@ -78,10 +116,26 @@ export interface SubmitActionAdapter {
   trackEvent: (payload: TrackEventPayload) => Promise<void>;
 }
 
+export interface AgentRuntimeStreamBatch {
+  messageId: string;
+  patches: IAgentExecutionMessagePatch[];
+  nextCursor?: string;
+  done: boolean;
+  pollIntervalMs?: number;
+}
+
+export interface AgentExecutionControlResult {
+  success: boolean;
+  code?: string;
+  retryable?: boolean;
+  message?: string;
+  patch?: IAgentExecutionMessagePatch;
+}
+
 type MockResponseChunk = string;
 
-const MOCK_PROVIDER_MODE = 'mock';
-const REMOTE_PROVIDER_MODE = 'remote';
+export const MOCK_PROVIDER_MODE = 'mock';
+export const REMOTE_PROVIDER_MODE = 'remote';
 
 export const CHAT_PROVIDER_MODE =
   process.env.CHAT_PROVIDER_MODE ?? MOCK_PROVIDER_MODE;
@@ -95,6 +149,12 @@ export const CHAT_SUBMIT_ACTION_API_URL =
   process.env.CHAT_SUBMIT_ACTION_API_URL ?? '/api/chatbot/submit-action';
 export const CHAT_TRACK_EVENT_API_URL =
   process.env.CHAT_TRACK_EVENT_API_URL ?? '/api/chatbot/track-event';
+export const CHAT_AGENT_RUNTIME_STREAM_API_URL =
+  process.env.CHAT_AGENT_RUNTIME_STREAM_API_URL ??
+  '/api/chatbot/runtime-stream';
+export const CHAT_AGENT_EXECUTION_CONTROL_API_URL =
+  process.env.CHAT_AGENT_EXECUTION_CONTROL_API_URL ??
+  '/api/chatbot/execution-control';
 
 interface RemoteSubmitActionResponse {
   success?: boolean;
@@ -102,6 +162,22 @@ interface RemoteSubmitActionResponse {
   retryable?: boolean;
   message?: string;
   data?: Record<string, unknown>;
+}
+
+interface RemoteAgentRuntimeStreamResponse {
+  messageId?: string;
+  patches?: IAgentExecutionMessagePatch[];
+  nextCursor?: string;
+  done?: boolean;
+  pollIntervalMs?: number;
+}
+
+interface RemoteAgentExecutionControlResponse {
+  success?: boolean;
+  code?: string;
+  retryable?: boolean;
+  message?: string;
+  patch?: IAgentExecutionMessagePatch;
 }
 
 const normalizeSubmitApiActionResult = (
@@ -196,7 +272,7 @@ export const trackMockEvent = async ({
   });
 };
 
-const executeRemoteSubmitApiAction = async (
+export const executeRemoteSubmitApiAction = async (
   api: string,
   payload: Record<string, unknown>,
 ): Promise<SubmitApiActionResult> => {
@@ -226,7 +302,9 @@ const executeRemoteSubmitApiAction = async (
   }
 };
 
-const trackRemoteEvent = async (payload: TrackEventPayload): Promise<void> => {
+export const trackRemoteEvent = async (
+  payload: TrackEventPayload,
+): Promise<void> => {
   try {
     await request(CHAT_TRACK_EVENT_API_URL, {
       method: 'POST',
@@ -238,6 +316,88 @@ const trackRemoteEvent = async (payload: TrackEventPayload): Promise<void> => {
       error,
       payload,
     });
+  }
+};
+
+export const fetchRemoteAgentRuntimeStreamBatch = async (
+  messageId: string,
+  cursor?: string,
+): Promise<AgentRuntimeStreamBatch> => {
+  try {
+    const response = await request<RemoteAgentRuntimeStreamResponse>(
+      CHAT_AGENT_RUNTIME_STREAM_API_URL,
+      {
+        method: 'POST',
+        data: {
+          messageId,
+          cursor,
+        },
+        skipErrorHandler: true,
+      },
+    );
+
+    return {
+      messageId: response?.messageId ?? messageId,
+      patches: Array.isArray(response?.patches) ? response.patches : [],
+      nextCursor: response?.nextCursor,
+      done: Boolean(response?.done),
+      pollIntervalMs: response?.pollIntervalMs,
+    };
+  } catch (error) {
+    return {
+      messageId,
+      done: true,
+      patches: [
+        {
+          status: 'error',
+          updatedAt: new Date().toISOString(),
+          summary:
+            error instanceof Error
+              ? `运行时事件流拉取失败：${error.message}`
+              : '运行时事件流拉取失败。',
+        },
+      ],
+    };
+  }
+};
+
+export const executeRemoteAgentExecutionControl = async (
+  messageId: string,
+  control: IAgentExecutionControl,
+): Promise<AgentExecutionControlResult> => {
+  try {
+    const response = await request<RemoteAgentExecutionControlResponse>(
+      CHAT_AGENT_EXECUTION_CONTROL_API_URL,
+      {
+        method: 'POST',
+        data: {
+          messageId,
+          control,
+        },
+        skipErrorHandler: true,
+      },
+    );
+
+    return {
+      success: Boolean(response?.success),
+      code: response?.code,
+      retryable: response?.retryable,
+      message: response?.message,
+      patch: response?.patch,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 'REMOTE_CONTROL_FAILED',
+      retryable: true,
+      message:
+        error instanceof Error ? error.message : '远端执行控制请求失败。',
+      patch: {
+        clearPendingControl: true,
+        controlErrorMessage:
+          error instanceof Error ? error.message : '远端执行控制请求失败。',
+      },
+    };
   }
 };
 
@@ -349,6 +509,13 @@ const createMockAssistantPayload = (
     return {
       mode: 'single',
       payload: createMockApprovalPayload(prompt),
+    };
+  }
+
+  if (type === 'agent-execution') {
+    return {
+      mode: 'single',
+      payload: createMockAgentExecutionPayload(prompt),
     };
   }
 

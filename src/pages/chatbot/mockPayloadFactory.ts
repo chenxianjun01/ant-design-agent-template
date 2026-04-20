@@ -1,18 +1,19 @@
 import {
+  type IAgentExecutionMessageContent,
+  type IApprovalMessageContent,
+  type IAudioMessageContent,
   type IChartMessageContent,
+  type IFileMessageContent,
+  type IFormMessageContent,
+  type IImageMessageContent,
+  type IMapMessageContent,
   type IMessageItemDraft,
+  type ITableMessageContent,
+  type ITimelineMessageContent,
   MessageType,
   stringifyStructuredMessage,
 } from './data';
-
-export type MockChartTypeLike =
-  | 'line'
-  | 'column'
-  | 'pie'
-  | 'area'
-  | 'bar'
-  | 'radar'
-  | 'dualAxes';
+import type { MockChartType } from './service';
 
 export const createMockTextPayload = (
   prompt: string,
@@ -52,7 +53,7 @@ export const createMockFilePayload = (prompt: string): string =>
                 action: 'insertMessage',
                 message: {
                   role: 'assistant',
-                  type: 'text',
+                  type: MessageType.TEXT,
                   content: {
                     text: '已记录文件 {{fileName}} 的下载回执。',
                   },
@@ -71,7 +72,7 @@ export const createMockFilePayload = (prompt: string): string =>
           description: '发布检查清单',
         },
       ],
-    },
+    } satisfies IFileMessageContent,
   });
 
 export const createMockImagePayload = (prompt: string): string =>
@@ -109,7 +110,7 @@ export const createMockImagePayload = (prompt: string): string =>
           description: '用于验证多图并排展示',
         },
       ],
-    },
+    } satisfies IImageMessageContent,
   });
 
 export const createMockAudioPayload = (prompt: string): string =>
@@ -140,13 +141,13 @@ export const createMockAudioPayload = (prompt: string): string =>
           ],
         },
       ],
-    },
+    } satisfies IAudioMessageContent,
   });
 
 export const createMockTablePayload = (prompt: string): string =>
   stringifyStructuredMessage({
     role: 'assistant',
-    type: 'table',
+    type: MessageType.TABLE,
     content: {
       title: '本地 Mock 表格',
       description: `根据问题“${prompt || '未提供内容'}”生成的演示数据`,
@@ -184,7 +185,7 @@ export const createMockTablePayload = (prompt: string): string =>
         },
       ],
       rowKey: 'id',
-    },
+    } satisfies ITableMessageContent,
     schema: {
       type: 'object',
       'x-component': 'Table',
@@ -197,7 +198,7 @@ export const createMockTablePayload = (prompt: string): string =>
 export const createMockChartPayload = (
   prompt: string,
   pickRandom: <T>(items: readonly T[]) => T,
-  forcedChartType?: MockChartTypeLike,
+  forcedChartType?: MockChartType,
 ): string => {
   const chartSamples: Array<
     IMessageItemDraft & {
@@ -377,7 +378,7 @@ export const createMockFormPayload = (
 ): string =>
   stringifyStructuredMessage({
     role: 'assistant',
-    type: 'form',
+    type: MessageType.FORM,
     content: {
       title: '本地 Mock 表单',
       description: `用于验证 form 类型分发，问题关键词：${prompt || '未提供内容'}`,
@@ -399,7 +400,7 @@ export const createMockFormPayload = (
           action: 'insertMessage',
           message: {
             role: 'assistant',
-            type: 'table',
+            type: MessageType.TABLE,
             content: {
               title: '{{applicant}} 的提交结果卡片',
               description: '主题：{{topic}}，优先级：{{priority}}',
@@ -424,7 +425,7 @@ export const createMockFormPayload = (
           mockType: 'text',
           message: {
             role: 'assistant',
-            type: 'text',
+            type: MessageType.TEXT,
             content: {
               text: '提交成功。{{applicant}} 的 {{topic}} 已登记，当前优先级为 {{priority}}，系统正在继续分析。',
             },
@@ -452,7 +453,7 @@ export const createMockFormPayload = (
               type: 'insertMessage',
               message: {
                 role: 'assistant',
-                type: 'text',
+                type: MessageType.TEXT,
                 content: {
                   text: '正在调用工单接口，准备为 {{applicant}} 创建 {{topic}}。',
                 },
@@ -475,7 +476,7 @@ export const createMockFormPayload = (
               type: 'insertMessage',
               message: {
                 role: 'assistant',
-                type: 'text',
+                type: MessageType.TEXT,
                 content: {
                   text: '接口执行完成，工单 {{ticketId}} 已进入待处理队列，负责人：{{owner}}。',
                 },
@@ -496,7 +497,7 @@ export const createMockFormPayload = (
           },
           onSuccessMessage: {
             role: 'assistant',
-            type: 'table',
+            type: MessageType.TABLE,
             content: {
               title: 'API 执行结果',
               description: '工单接口已成功执行',
@@ -516,14 +517,14 @@ export const createMockFormPayload = (
           },
           onErrorMessage: {
             role: 'assistant',
-            type: 'text',
+            type: MessageType.TEXT,
             content: {
               text: 'API 调用失败：{{apiMessage}}',
             },
           },
         },
       ]),
-    },
+    } satisfies IFormMessageContent,
     schema: {
       type: 'object',
       required: ['applicant', 'topic', 'priority'],
@@ -596,7 +597,7 @@ export const createMockMapPayload = (prompt: string): string =>
           description: '主要服务节点',
         },
       ],
-    },
+    } satisfies IMapMessageContent,
   });
 
 export const createMockTimelinePayload = (prompt: string): string =>
@@ -629,7 +630,7 @@ export const createMockTimelinePayload = (prompt: string): string =>
           tags: ['renderer', 'timeline'],
         },
       ],
-    },
+    } satisfies ITimelineMessageContent,
   });
 
 export const createMockApprovalPayload = (prompt: string): string =>
@@ -677,7 +678,7 @@ export const createMockApprovalPayload = (prompt: string): string =>
             },
             onSuccessMessage: {
               role: 'assistant',
-              type: 'text',
+              type: MessageType.TEXT,
               content: {
                 text: '审批已通过，已向相关成员发送“{{topic}}”通知。',
               },
@@ -706,5 +707,68 @@ export const createMockApprovalPayload = (prompt: string): string =>
           },
         },
       ],
-    },
+    } satisfies IApprovalMessageContent,
+  });
+
+export const createMockAgentExecutionPayload = (prompt: string): string =>
+  stringifyStructuredMessage({
+    role: 'assistant',
+    type: MessageType.AGENT_EXECUTION,
+    content: {
+      title: '智能体执行状态',
+      description: `围绕“${prompt || '未提供内容'}”生成的执行态反馈`,
+      summary: '已完成问题拆解与上下文检索，正在生成最终回答。',
+      status: 'running',
+      startedAt: '09:30',
+      updatedAt: '09:32',
+      steps: [
+        {
+          key: 'intent',
+          title: '解析用户意图',
+          description: '识别问题范围并确定输出形式。',
+          status: 'success',
+          startedAt: '09:30',
+          finishedAt: '09:30',
+          duration: '12ms',
+          tags: ['planner', 'intent'],
+        },
+        {
+          key: 'retrieval',
+          title: '检索上下文',
+          description: '读取相关实现文件与历史变更记录。',
+          status: 'success',
+          startedAt: '09:31',
+          finishedAt: '09:31',
+          duration: '84ms',
+          tags: ['retrieval'],
+        },
+        {
+          key: 'compose',
+          title: '生成回答',
+          description: '组织结构化结果并准备回填对话流。',
+          status: 'running',
+          startedAt: '09:32',
+          tags: ['generator', 'response'],
+        },
+      ],
+      controls: [
+        {
+          key: 'stop-execution',
+          label: '停止',
+          action: 'stop',
+          danger: true,
+        },
+        {
+          key: 'retry-execution',
+          label: '重试',
+          action: 'retry',
+        },
+        {
+          key: 'continue-execution',
+          label: '继续',
+          action: 'continue',
+          buttonType: 'primary',
+        },
+      ],
+    } satisfies IAgentExecutionMessageContent,
   });

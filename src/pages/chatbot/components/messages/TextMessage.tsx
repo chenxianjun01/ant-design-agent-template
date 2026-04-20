@@ -1,20 +1,8 @@
 import { Typography } from 'antd';
 import React, { memo } from 'react';
 
-import type { IMessageItem, ITextMessageContent } from '../../data';
-import type { FormSubmitExecutionResult } from '../schema/formSubmitAction';
-
-export interface MessageComponentProps {
-  message: IMessageItem;
-  schemaFieldRender?: (
-    schema: Record<string, unknown>,
-    message: IMessageItem,
-  ) => React.ReactNode;
-  onFormSubmit?: (
-    message: IMessageItem,
-    values: Record<string, unknown>,
-  ) => void | Promise<FormSubmitExecutionResult>;
-}
+import type { ITextMessageContent } from '../../data';
+import type { MessageComponentProps } from './types';
 
 const TextMessage: React.FC<MessageComponentProps> = ({ message }) => {
   const content = message.content as ITextMessageContent;

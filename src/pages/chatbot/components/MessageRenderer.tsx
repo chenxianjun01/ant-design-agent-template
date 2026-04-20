@@ -2,6 +2,8 @@ import React, { memo, useMemo } from 'react';
 
 import type { IMessageItem, MessageSchema } from '../data';
 import { MessageType } from '../data';
+import type { AgentExecutionControlHandler, FormSubmitHandler } from '../types';
+import AgentExecutionMessage from './messages/AgentExecutionMessage';
 import ApprovalMessage from './messages/ApprovalMessage';
 import AudioMessage from './messages/AudioMessage';
 import ChartMessage from './messages/ChartMessage';
@@ -10,11 +12,10 @@ import FormMessage from './messages/FormMessage';
 import ImageMessage from './messages/ImageMessage';
 import MapMessage from './messages/MapMessage';
 import TableMessage from './messages/TableMessage';
-import type { MessageComponentProps } from './messages/TextMessage';
 import TextMessage from './messages/TextMessage';
 import TimelineMessage from './messages/TimelineMessage';
+import type { MessageComponentProps } from './messages/types';
 import UnsupportedMessage from './messages/UnsupportedMessage';
-import type { FormSubmitExecutionResult } from './schema/formSubmitAction';
 
 export interface MessageRendererProps {
   message: IMessageItem;
@@ -22,10 +23,8 @@ export interface MessageRendererProps {
     schema: MessageSchema,
     message: IMessageItem,
   ) => React.ReactNode;
-  onFormSubmit?: (
-    message: IMessageItem,
-    values: Record<string, unknown>,
-  ) => void | Promise<FormSubmitExecutionResult>;
+  onFormSubmit?: FormSubmitHandler;
+  onAgentExecutionControl?: AgentExecutionControlHandler;
 }
 
 type MessageComponent = React.ComponentType<MessageComponentProps>;
@@ -41,6 +40,7 @@ export const componentMap: Record<MessageType, MessageComponent> = {
   [MessageType.MAP]: MapMessage,
   [MessageType.TIMELINE]: TimelineMessage,
   [MessageType.APPROVAL]: ApprovalMessage,
+  [MessageType.AGENT_EXECUTION]: AgentExecutionMessage,
 };
 
 const normalizeMessageType = (
@@ -56,6 +56,7 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({
   message,
   schemaFieldRender,
   onFormSubmit,
+  onAgentExecutionControl,
 }) => {
   const Component = useMemo<MessageComponent>(() => {
     const type = normalizeMessageType(message.type);
@@ -67,6 +68,7 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({
       message={message}
       schemaFieldRender={schemaFieldRender}
       onFormSubmit={onFormSubmit}
+      onAgentExecutionControl={onAgentExecutionControl}
     />
   );
 };

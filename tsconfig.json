@@ -12,6 +12,8 @@
     "declaration": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types"],
     "paths": {
       "antd": ["./node_modules/antd/es/index.d.ts"],
       "@ant-design/icons": ["./node_modules/@ant-design/icons/lib/index.d.ts"],
@@ -29,5 +31,6 @@
       "@root/*": ["./*"]
     }
   },
-  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"]
+  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"],
+  "exclude": ["./cloudflare-worker/**/*"]
 }

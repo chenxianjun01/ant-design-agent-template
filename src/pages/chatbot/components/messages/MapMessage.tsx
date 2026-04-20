@@ -2,7 +2,7 @@ import { Alert, Button, Empty, Space, Typography } from 'antd';
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { IMapMessageContent, IMapMessageMarker } from '../../data';
-import type { MessageComponentProps } from './TextMessage';
+import type { MessageComponentProps } from './types';
 import 'ol/ol.css';
 import {
   MessageActionAlert,

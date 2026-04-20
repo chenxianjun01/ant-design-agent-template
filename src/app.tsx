@@ -19,6 +19,73 @@ const isDev = process.env.NODE_ENV === 'development';
 const isDevOrTest = isDev || process.env.CI;
 const loginPath = '/user/login';
 
+/** 与 `src/locales` 下目录一致；浏览器语言需归一化到此集合，否则会触发 umi 的 locale 警告 */
+const SUPPORTED_UMI_LOCALES = new Set([
+  'bn-BD',
+  'en-US',
+  'fa-IR',
+  'id-ID',
+  'ja-JP',
+  'pt-BR',
+  'zh-CN',
+  'zh-TW',
+]);
+
+const DEFAULT_UMI_LOCALE = 'zh-CN';
+
+function normalizeUmiLocale(raw: string): string {
+  if (!raw) return DEFAULT_UMI_LOCALE;
+  const key = raw.replace(/_/g, '-');
+  if (SUPPORTED_UMI_LOCALES.has(key)) return key;
+  const lower = key.toLowerCase();
+  if (lower.startsWith('zh')) {
+    if (
+      lower.includes('tw') ||
+      lower.includes('hk') ||
+      lower.includes('mo') ||
+      lower.includes('hant')
+    ) {
+      return 'zh-TW';
+    }
+    return 'zh-CN';
+  }
+  if (lower.startsWith('en')) return 'en-US';
+  if (lower.startsWith('pt')) return 'pt-BR';
+  if (lower.startsWith('ja')) return 'ja-JP';
+  if (lower.startsWith('id')) return 'id-ID';
+  if (lower.startsWith('fa')) return 'fa-IR';
+  if (lower.startsWith('bn')) return 'bn-BD';
+  return DEFAULT_UMI_LOCALE;
+}
+
+/**
+ * 覆盖 umi 默认 getLocale：避免 `navigator.language` / localStorage 为 `en` 等与目录名不一致时控制台报错。
+ * @see https://umijs.org/docs/max/i18n#运行时配置
+ */
+export const locale = {
+  getLocale: (): string => {
+    if (typeof window === 'undefined') return DEFAULT_UMI_LOCALE;
+    let fromStorage = '';
+    try {
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.cookieEnabled &&
+        window.localStorage
+      ) {
+        fromStorage = window.localStorage.getItem('umi_locale') || '';
+      }
+    } catch {
+      // ignore
+    }
+    const browserLang =
+      typeof navigator !== 'undefined' && typeof navigator.language === 'string'
+        ? navigator.language.split('-').join('-')
+        : '';
+    const raw = fromStorage || browserLang || DEFAULT_UMI_LOCALE;
+    return normalizeUmiLocale(raw);
+  },
+};
+
 /**
  * @see https://umijs.org/docs/api/runtime-config#getinitialstate
  * */

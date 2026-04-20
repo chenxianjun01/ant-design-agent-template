@@ -8,6 +8,7 @@ import proxy from './proxy';
 import routes from './routes';
 
 const { UMI_ENV = 'dev' } = process.env;
+const ENABLE_UTOOPACK = process.env.ENABLE_UTOOPACK === 'true';
 
 /**
  * @name 使用公共路径
@@ -190,10 +191,16 @@ export default defineConfig({
   ],
 
   mock: {
-    include: ['mock/**/*.ts', 'src/pages/**/_mock.ts'],
+    include: ['src/pages/**/_mock.ts'],
     exclude: ['mock/requestRecord.mock.js'],
   },
-  utoopack: {},
+  /**
+   * 勿写 `utoopack: {}`：空对象在布尔判断中为 true，会误开启实验性 utoopack，
+   * 开发环境下 HTML 可能仍引用 `/umi.css`，而实际资源路径不一致，导致
+   * “MIME type ('text/html') is not a supported stylesheet MIME type”。
+   * 默认强制关闭；仅当 `ENABLE_UTOOPACK=true` 时才显式开启。
+   */
+  utoopack: ENABLE_UTOOPACK ? { root: process.cwd() } : false,
   requestRecord: {},
   exportStatic: {},
   define: {

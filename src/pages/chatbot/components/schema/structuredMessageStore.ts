@@ -31,12 +31,54 @@ export const appendStructuredMessage = (
   };
 };
 
+export const upsertStructuredMessageByConversation = (
+  messageMap: StructuredMessageMap,
+  conversationKey: string,
+  message: IMessageItemDraft,
+): StructuredMessageMap => {
+  const nextMessage = createMessageItem(message);
+  const currentMessages = getStructuredMessagesByConversation(
+    messageMap,
+    conversationKey,
+  );
+  const existingIndex = currentMessages.findIndex(
+    (item) => item.id === nextMessage.id,
+  );
+
+  if (existingIndex === -1) {
+    return {
+      ...messageMap,
+      [conversationKey]: [...currentMessages, nextMessage],
+    };
+  }
+
+  return {
+    ...messageMap,
+    [conversationKey]: currentMessages.map((item, index) =>
+      index === existingIndex ? nextMessage : item,
+    ),
+  };
+};
+
 export const clearStructuredMessagesByConversation = (
   messageMap: StructuredMessageMap,
   conversationKey: string,
 ): StructuredMessageMap => ({
   ...messageMap,
   [conversationKey]: [],
+});
+
+export const updateStructuredMessageByConversation = (
+  messageMap: StructuredMessageMap,
+  conversationKey: string,
+  messageId: string,
+  updater: (message: IMessageItem) => IMessageItem,
+): StructuredMessageMap => ({
+  ...messageMap,
+  [conversationKey]: getStructuredMessagesByConversation(
+    messageMap,
+    conversationKey,
+  ).map((message) => (message.id === messageId ? updater(message) : message)),
 });
 
 export const removeStructuredMessagesByConversation = (

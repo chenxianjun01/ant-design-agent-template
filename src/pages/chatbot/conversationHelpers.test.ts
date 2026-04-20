@@ -31,6 +31,28 @@ describe('conversationHelpers', () => {
     });
   });
 
+  it('keeps existing label for non-draft preset conversations', () => {
+    const result = applySentMessageToConversation(
+      [
+        {
+          key: 'preset-1',
+          label: '预置问题',
+          starterPrompt: '请解释联动校验',
+        },
+      ],
+      'preset-1',
+      '真正发送的内容',
+      '2026-04-18T10:00:00.000Z',
+    );
+
+    expect(result[0]).toMatchObject({
+      key: 'preset-1',
+      label: '预置问题',
+      starterPrompt: '请解释联动校验',
+      updatedAt: '2026-04-18T10:00:00.000Z',
+    });
+  });
+
   it('refreshes active conversation to top', () => {
     const result = refreshConversationItem(
       [
