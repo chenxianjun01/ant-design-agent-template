@@ -1,0 +1,4 @@
+/* Dev fallback for environments where Umi HTML still references /umi.css. */
+body {
+  margin: 0;
+}
