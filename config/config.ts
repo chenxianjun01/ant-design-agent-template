@@ -27,6 +27,8 @@ export default defineConfig({
    * @doc https://umijs.org/docs/api/config#hash
    */
   hash: true,
+  // Avoid esbuild helper name collisions across async chunks in production build.
+  esbuildMinifyIIFE: true,
 
   publicPath: PUBLIC_PATH,
 
