@@ -21,6 +21,14 @@ const RuntimeDebugPanel: React.FC<RuntimeDebugPanelProps> = ({ events }) => {
     <Card
       size="small"
       title="Runtime Debug"
+      styles={{
+        body: expanded
+          ? {
+              maxHeight: 'min(360px, 40vh)',
+              overflowY: 'auto',
+            }
+          : undefined,
+      }}
       extra={
         <Button size="small" type="text" onClick={() => setExpanded((v) => !v)}>
           {expanded ? '收起' : '展开'}
@@ -29,14 +37,23 @@ const RuntimeDebugPanel: React.FC<RuntimeDebugPanelProps> = ({ events }) => {
     >
       {expanded ? (
         events.length > 0 ? (
-          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+          <Space
+            orientation="vertical"
+            size={8}
+            style={{ width: '100%' }}
+            data-testid="runtime-debug-scroll-content"
+          >
             {events.map((event) => (
               <Card
                 key={event.id}
                 size="small"
                 styles={{ body: { padding: 12 } }}
               >
-                <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                <Space
+                  orientation="vertical"
+                  size={6}
+                  style={{ width: '100%' }}
+                >
                   <Space size={[8, 4]} wrap>
                     <Tag color={levelColorMap[event.level]}>{event.level}</Tag>
                     <Tag>{event.type}</Tag>

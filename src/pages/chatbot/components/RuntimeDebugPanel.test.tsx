@@ -27,5 +27,10 @@ describe('RuntimeDebugPanel', () => {
 
     expect(screen.getByText('已发起聊天请求')).toBeTruthy();
     expect(screen.getByText('chat.request')).toBeTruthy();
+    const containerStyle = screen
+      .getByTestId('runtime-debug-scroll-content')
+      .parentElement?.getAttribute('style');
+    expect(containerStyle).toContain('max-height: min(360px, 40vh)');
+    expect(containerStyle).toContain('overflow-y: auto');
   });
 });
