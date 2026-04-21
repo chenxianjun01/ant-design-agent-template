@@ -132,7 +132,7 @@ Rich media follow-up actions MUST route through the shared action engine for con
 - **AND** action execution routes through the shared action engine
 
 ### Requirement: Core chatbot type coverage
-The chatbot UI MUST support text, file, image, audio, table, form, chart, and map message coverage for local development and integration.
+The chatbot UI MUST support text, file, image, audio, video, table, form, chart, and map message coverage for local development and integration.
 
 #### Scenario: Core media coverage is available in development
 - **WHEN** developers switch the mock type to one of the supported structured media types
