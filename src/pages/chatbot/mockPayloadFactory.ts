@@ -10,6 +10,7 @@ import {
   type IMessageItemDraft,
   type ITableMessageContent,
   type ITimelineMessageContent,
+  type IVideoMessageContent,
   MessageType,
   stringifyStructuredMessage,
 } from './data';
@@ -143,6 +144,55 @@ export const createMockAudioPayload = (prompt: string): string =>
       ],
     } satisfies IAudioMessageContent,
   });
+
+export const createMockVideoPayload = (
+  prompt: string,
+  pickRandom: <T>(items: readonly T[]) => T,
+  sourceMode?: 'local' | 'remote',
+): string => {
+  const scenarios = {
+    local: {
+      title: '本地录屏回放',
+      description: `围绕“${prompt || '未提供内容'}”生成的本地资源预览`,
+      url: '/mock-assets/videos/agent-walkthrough.mp4',
+      poster:
+        'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80',
+      duration: '01:24',
+      format: 'mp4',
+    },
+    remote: {
+      title: '第三方直链视频',
+      description: `围绕“${prompt || '未提供内容'}”生成的远端媒体直链预览`,
+      url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+      poster:
+        'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80',
+      duration: '00:30',
+      format: 'mp4',
+    },
+  } as const;
+  const mode = sourceMode ?? pickRandom(['local', 'remote'] as const);
+  const selected = scenarios[mode];
+
+  return stringifyStructuredMessage({
+    role: 'assistant',
+    type: MessageType.VIDEO,
+    content: {
+      ...selected,
+      actions: [
+        {
+          key: 'video-summary',
+          label: '生成视频摘要',
+          submitAction: {
+            action: 'request',
+            promptTemplate:
+              '请根据视频 {{videoTitle}} 生成摘要，地址：{{videoUrl}}，时长：{{duration}}。',
+            mockType: 'text',
+          },
+        },
+      ],
+    } satisfies IVideoMessageContent,
+  });
+};
 
 export const createMockTablePayload = (prompt: string): string =>
   stringifyStructuredMessage({

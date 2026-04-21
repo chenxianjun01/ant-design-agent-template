@@ -6,6 +6,7 @@ import AudioMessage from './AudioMessage';
 import FileMessage from './FileMessage';
 import ImageMessage from './ImageMessage';
 import MapMessage from './MapMessage';
+import VideoMessage from './VideoMessage';
 
 describe('rich media messages', () => {
   it('renders file message content', () => {
@@ -101,6 +102,54 @@ describe('rich media messages', () => {
     expect(screen.getByText('今日摘要')).toBeTruthy();
     expect(screen.getByText('00:10')).toBeTruthy();
     expect(screen.getByText('这是一段转写内容。')).toBeTruthy();
+  });
+
+  it('renders video message content with inline player', () => {
+    const onFormSubmit = jest.fn().mockResolvedValue({ status: 'success' });
+
+    const { container } = render(
+      React.createElement(VideoMessage, {
+        onFormSubmit,
+        message: {
+          id: 'video-1',
+          role: 'assistant',
+          type: MessageType.VIDEO,
+          content: {
+            title: '产品演示视频',
+            description: '用于验证视频消息在气泡内直接播放。',
+            url: 'https://example.com/demo.mp4',
+            poster: 'https://example.com/demo-poster.png',
+            duration: '00:45',
+            format: 'mp4',
+            actions: [
+              {
+                label: '生成视频摘要',
+                submitAction: {
+                  action: 'request',
+                  promptTemplate: '总结 {{videoTitle}}',
+                  mockType: 'text',
+                },
+              },
+            ],
+          },
+        },
+      } as any),
+    );
+
+    const video = container.querySelector('video');
+    const source = container.querySelector('source');
+
+    expect(screen.getByText('产品演示视频')).toBeTruthy();
+    expect(screen.getByText('用于验证视频消息在气泡内直接播放。')).toBeTruthy();
+    expect(screen.getByText('00:45')).toBeTruthy();
+    expect(screen.getByText('mp4')).toBeTruthy();
+    expect(screen.getByRole('button', { name: '生成视频摘要' })).toBeTruthy();
+    expect(video?.getAttribute('poster')).toBe(
+      'https://example.com/demo-poster.png',
+    );
+    expect(video?.hasAttribute('controls')).toBe(true);
+    expect(source?.getAttribute('src')).toBe('https://example.com/demo.mp4');
+    expect(source?.getAttribute('type')).toBe('video/mp4');
   });
 
   it('renders map message summary content', () => {

@@ -1,0 +1,22 @@
+schema: spec-driven
+context: |
+  Tech stack: Ant Design Pro, React, TypeScript, @ant-design/x, @umijs/max request.
+  Domain: intelligent agent UI / structured chat interface.
+  Core module: src/pages/chatbot.
+  Existing message types: text, table, chart, form.
+  Existing execution chain: submitAction -> executor -> hook registry -> submitActionAdapter.
+  Existing local/remote integration points:
+    - /api/chatbot/submit-action
+    - /api/chatbot/track-event
+  Keep implementations incremental and compatible with the current chatbot page.
+
+rules:
+  proposal:
+    - State scope, goals, non-goals, impacted files, risks, and acceptance criteria.
+    - Prefer changes that preserve the current message protocol and rendering chain.
+  tasks:
+    - Break work into flat, verifiable tasks.
+    - Mark validation tasks explicitly.
+  spec:
+    - Describe required behavior, constraints, and integration boundaries.
+    - Favor normative wording such as MUST, SHOULD, MAY.

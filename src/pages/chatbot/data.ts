@@ -17,6 +17,7 @@ export enum MessageType {
   FILE = 'file',
   IMAGE = 'image',
   AUDIO = 'audio',
+  VIDEO = 'video',
   TABLE = 'table',
   CHART = 'chart',
   FORM = 'form',
@@ -183,6 +184,16 @@ export interface IAudioMessageContent {
   audios: IAudioMessageItem[];
 }
 
+export interface IVideoMessageContent {
+  title?: string;
+  description?: string;
+  url: string;
+  poster?: string;
+  duration?: string;
+  format?: string;
+  actions?: IMessageAction[];
+}
+
 export interface ITableMessageContent {
   title?: string;
   description?: string;
@@ -345,6 +356,7 @@ export type IMessageContent =
   | IFileMessageContent
   | IImageMessageContent
   | IAudioMessageContent
+  | IVideoMessageContent
   | ITableMessageContent
   | IChartMessageContent
   | IFormMessageContent
@@ -394,6 +406,18 @@ const isValidMessageContent = (
 
   if (type === MessageType.AUDIO) {
     return Array.isArray(content.audios);
+  }
+
+  if (type === MessageType.VIDEO) {
+    return (
+      typeof content.url === 'string' &&
+      content.url.trim().length > 0 &&
+      (content.poster === undefined || typeof content.poster === 'string') &&
+      (content.title === undefined || typeof content.title === 'string') &&
+      (content.duration === undefined ||
+        typeof content.duration === 'string') &&
+      (content.format === undefined || typeof content.format === 'string')
+    );
   }
 
   if (type === MessageType.TABLE) {

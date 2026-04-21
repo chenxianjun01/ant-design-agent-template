@@ -24,6 +24,7 @@ import {
   createMockTablePayload,
   createMockTextPayload,
   createMockTimelinePayload,
+  createMockVideoPayload,
 } from './mockPayloadFactory';
 
 export interface ChatMessage {
@@ -36,6 +37,7 @@ export const MOCK_MESSAGE_TYPES = [
   'file',
   'image',
   'audio',
+  'video',
   'table',
   'chart',
   'form',
@@ -62,6 +64,7 @@ export const MOCK_MESSAGE_TYPE_LABELS: Record<MockMessageType, string> = {
   file: '文件',
   image: '图片',
   audio: '音频',
+  video: '视频',
   table: '表格',
   chart: '图表',
   form: '表单',
@@ -481,6 +484,13 @@ const createMockAssistantPayload = (
     return {
       mode: 'single',
       payload: createMockAudioPayload(prompt),
+    };
+  }
+
+  if (type === 'video') {
+    return {
+      mode: 'single',
+      payload: createMockVideoPayload(prompt, pickRandom),
     };
   }
 

@@ -31,7 +31,6 @@ functions/*
 # claude code local settings
 .claude/settings.local.json
 .codex/
-openspec/
 
 # umi
 .umi

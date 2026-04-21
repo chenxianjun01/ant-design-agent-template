@@ -16,6 +16,7 @@ import TextMessage from './messages/TextMessage';
 import TimelineMessage from './messages/TimelineMessage';
 import type { MessageComponentProps } from './messages/types';
 import UnsupportedMessage from './messages/UnsupportedMessage';
+import VideoMessage from './messages/VideoMessage';
 
 export interface MessageRendererProps {
   message: IMessageItem;
@@ -34,6 +35,7 @@ export const componentMap: Record<MessageType, MessageComponent> = {
   [MessageType.FILE]: FileMessage,
   [MessageType.IMAGE]: ImageMessage,
   [MessageType.AUDIO]: AudioMessage,
+  [MessageType.VIDEO]: VideoMessage,
   [MessageType.TABLE]: TableMessage,
   [MessageType.CHART]: ChartMessage,
   [MessageType.FORM]: FormMessage,

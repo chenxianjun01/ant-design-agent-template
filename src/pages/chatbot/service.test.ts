@@ -1,4 +1,5 @@
 import { MessageType, normalizeStructuredMessage } from './data';
+import { createMockVideoPayload } from './mockPayloadFactory';
 
 const mockRequest = jest.fn();
 
@@ -91,6 +92,51 @@ describe('chatbot mock payload contract', () => {
     const parsed = normalizeStructuredMessage(JSON.parse(result.payload));
     expect(parsed?.type).toBe(MessageType.AUDIO);
     expect(parsed?.role).toBe('assistant');
+  });
+
+  it('normalizes video mock payload successfully', () => {
+    const result = chatbotMockPayloadFactory.createAssistantPayload(
+      '测试视频消息',
+      'video',
+    );
+
+    expect(result.mode).toBe('single');
+
+    const parsed = normalizeStructuredMessage(JSON.parse(result.payload));
+    expect(parsed?.type).toBe(MessageType.VIDEO);
+    expect(parsed?.role).toBe('assistant');
+    expect(parsed?.content).toEqual(
+      expect.objectContaining({
+        url: expect.any(String),
+        format: expect.any(String),
+      }),
+    );
+  });
+
+  it.each([
+    ['local', '/mock-assets/videos/agent-walkthrough.mp4'],
+    [
+      'remote',
+      'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    ],
+  ] as const)('creates contract-safe %s video payload', (sourceMode, expectedUrl) => {
+    const payload = createMockVideoPayload(
+      `测试${sourceMode}视频`,
+      (items) => items.find((item) => item === sourceMode) ?? items[0],
+      sourceMode,
+    );
+
+    const parsed = normalizeStructuredMessage(JSON.parse(payload));
+
+    expect(parsed?.type).toBe(MessageType.VIDEO);
+    expect(parsed?.content).toEqual(
+      expect.objectContaining({
+        url: expectedUrl,
+        poster: expect.any(String),
+        duration: expect.any(String),
+        format: 'mp4',
+      }),
+    );
   });
 
   it('normalizes chart mock payload successfully', () => {

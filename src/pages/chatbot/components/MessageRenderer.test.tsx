@@ -44,6 +44,16 @@ jest.mock('./messages/AudioMessage', () => ({
     ),
 }));
 
+jest.mock('./messages/VideoMessage', () => ({
+  __esModule: true,
+  default: () =>
+    require('react').createElement(
+      'div',
+      { 'data-testid': 'video-message' },
+      'video-message',
+    ),
+}));
+
 jest.mock('./messages/TableMessage', () => ({
   __esModule: true,
   default: () =>
@@ -135,19 +145,21 @@ const createMessage = (type: string) => {
           ? { images: [] }
           : type === MessageType.AUDIO
             ? { audios: [] }
-            : type === MessageType.TABLE
-              ? { dataSource: [] }
-              : type === MessageType.CHART
-                ? { type: 'line', data: [] }
-                : type === MessageType.MAP
-                  ? { center: [121.47, 31.23] }
-                  : type === MessageType.TIMELINE
-                    ? { items: [] }
-                    : type === MessageType.APPROVAL
-                      ? { title: 'approval' }
-                      : type === MessageType.AGENT_EXECUTION
-                        ? { title: 'execution', status: 'running', steps: [] }
-                        : { title: 'form' };
+            : type === MessageType.VIDEO
+              ? { url: 'https://example.com/video.mp4' }
+              : type === MessageType.TABLE
+                ? { dataSource: [] }
+                : type === MessageType.CHART
+                  ? { type: 'line', data: [] }
+                  : type === MessageType.MAP
+                    ? { center: [121.47, 31.23] }
+                    : type === MessageType.TIMELINE
+                      ? { items: [] }
+                      : type === MessageType.APPROVAL
+                        ? { title: 'approval' }
+                        : type === MessageType.AGENT_EXECUTION
+                          ? { title: 'execution', status: 'running', steps: [] }
+                          : { title: 'form' };
 
   return {
     id: `message-${String(type)}`,
@@ -196,6 +208,16 @@ describe('MessageRenderer', () => {
     );
 
     expect(screen.getByTestId('audio-message')).toBeTruthy();
+  });
+
+  it('renders video component for video message type', () => {
+    render(
+      React.createElement(MessageRenderer, {
+        message: createMessage(MessageType.VIDEO),
+      }),
+    );
+
+    expect(screen.getByTestId('video-message')).toBeTruthy();
   });
 
   it('renders timeline component for timeline message type', () => {
