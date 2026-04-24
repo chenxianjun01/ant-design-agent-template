@@ -1,6 +1,6 @@
 {
-  "name": "Ant Design Pro",
-  "short_name": "Ant Design Pro",
+  "name": "智能体协同平台 v1.0",
+  "short_name": "智能体协同平台 v1.0",
   "display": "standalone",
   "start_url": "./?utm_source=homescreen",
   "theme_color": "#002140",
