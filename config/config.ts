@@ -100,7 +100,7 @@ export default defineConfig({
    * @name layout 插件
    * @doc https://umijs.org/docs/max/layout-menu
    */
-  title: '智能体协同平台 v1.0',
+  title: '闻迅智能体平台 v1.0',
   layout: {
     locale: true,
     ...defaultSettings,
