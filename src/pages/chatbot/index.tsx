@@ -309,7 +309,6 @@ const ChatbotPage: React.FC = () => {
                     items={bubbleItems}
                     role={roleConfig}
                     autoScroll
-                    styles={{ root: { maxWidth: 940 } }}
                   />
                 </div>
               )}
@@ -370,7 +369,7 @@ const ChatbotPage: React.FC = () => {
                   onCancel={abort}
                   placeholder={`输入消息，按 Enter 发送，当前返回 ${currentMockTypeLabel}...`}
                   autoSize={{ minRows: 4, maxRows: 8 }}
-                  style={{ maxWidth: 940, width: '100%' }}
+                  style={{ width: '100%' }}
                   styles={{ input: { paddingBlock: 0 } }}
                 />
               </div>

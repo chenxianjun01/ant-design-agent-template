@@ -71,7 +71,6 @@ export const useStyles = createStyles(({ css, token }) => ({
 
   emptyState: css`
     width: 100%;
-    max-width: 940px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -103,7 +102,6 @@ export const useStyles = createStyles(({ css, token }) => ({
 
   mockToolbarCompact: css`
     width: 100%;
-    max-width: 940px;
     padding: ${token.paddingXS}px ${token.paddingSM}px;
     border: 1px solid ${token.colorBorderSecondary};
     border-radius: ${token.borderRadiusLG}px;
@@ -112,6 +110,5 @@ export const useStyles = createStyles(({ css, token }) => ({
 
   debugPanel: css`
     width: 100%;
-    max-width: 940px;
   `,
 }));

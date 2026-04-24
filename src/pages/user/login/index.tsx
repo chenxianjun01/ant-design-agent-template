@@ -205,7 +205,7 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
+          title="智能体协同平台 v1.0"
           subTitle={intl.formatMessage({
             id: 'pages.layouts.userLayout.title',
           })}
