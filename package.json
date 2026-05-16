@@ -76,7 +76,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-helmet": "^6.1.11",
     "@types/react-syntax-highlighter": "15.5.13",
-    "@umijs/lint": "^4.6.45",
+    "@umijs/lint": "^4.6.55",
     "@umijs/max": "^4.6.45",
     "@umijs/max-plugin-openapi": "^2.0.3",
     "@umijs/request-record": "^1.1.3",
