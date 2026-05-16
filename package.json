@@ -43,7 +43,7 @@
     "@ant-design/x": "^2.5.0",
     "@ant-design/x-markdown": "^2.5.0",
     "@ant-design/x-sdk": "^2.5.0",
-    "@antv/l7": "^2.22.7",
+    "@antv/l7": "^2.25.10",
     "@antv/l7-react": "^2.4.3",
     "@formily/antd-v5": "^1.2.4",
     "@formily/core": "^2.3.7",
