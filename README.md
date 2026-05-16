@@ -23,6 +23,10 @@ Language: 🇺🇸 | [🇨🇳](./README.zh-CN.md)
 - ChangeLog: http://pro.ant.design/docs/changelog
 - FAQ: http://pro.ant.design/docs/faq
 
+## Project Preview
+
+![AI 智能体对话界面预览](./public/images/agent-ui.png)
+
 ## Features
 
 - :bulb: **TypeScript**: A language for application-scale JavaScript
