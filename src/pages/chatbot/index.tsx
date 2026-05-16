@@ -1,14 +1,27 @@
-import { UserOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  CompassOutlined,
+  SendOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Bubble, Conversations, Sender, XProvider } from '@ant-design/x';
 import type {
   BubbleItemType,
   BubbleListProps,
 } from '@ant-design/x/es/bubble/interface';
+import xZhCN from '@ant-design/x/es/locale/zh_CN';
 import XMarkdown from '@ant-design/x-markdown';
 import { useXChat } from '@ant-design/x-sdk';
-import { Avatar, Card, Segmented, Space, Tag, Typography } from 'antd';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { history } from '@umijs/max';
+import { Avatar, Button, Card, Segmented, Space, Tag, Typography } from 'antd';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { buildBubbleItems } from './buildBubbleItems';
 import {
@@ -70,6 +83,13 @@ const TypewriterTitle: React.FC = () => {
 
 const STREAMING_ACTIVE = { hasNextChunk: true, enableAnimation: true };
 const STREAMING_IDLE = { hasNextChunk: false, enableAnimation: true };
+const X_SENDER_LOCALE = {
+  ...xZhCN,
+  Sender: {
+    ...xZhCN.Sender,
+    stopLoading: '停止',
+  },
+};
 
 const roleConfig: BubbleListProps['role'] = {
   user: {
@@ -99,13 +119,18 @@ const roleConfig: BubbleListProps['role'] = {
       if (info?.loading || !content) return undefined;
       if (typeof content !== 'string') return content;
       return (
-        <XMarkdown
-          streaming={
-            info?.status === 'updating' ? STREAMING_ACTIVE : STREAMING_IDLE
-          }
-        >
-          {content}
-        </XMarkdown>
+        <span>
+          <XMarkdown
+            streaming={
+              info?.status === 'updating' ? STREAMING_ACTIVE : STREAMING_IDLE
+            }
+          >
+            {content}
+          </XMarkdown>
+          {info?.status === 'updating' && (
+            <span className="chatbot-stream-cursor">|</span>
+          )}
+        </span>
       );
     },
   },
@@ -260,9 +285,45 @@ const ChatbotPage: React.FC = () => {
     mockChartType,
     mockType,
   });
+  const senderPlaceholder = `输入消息，按 Enter 发送，当前返回 ${currentMockTypeLabel}...`;
+  const handleSenderKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      const isModifierPressed = event.ctrlKey || event.altKey || event.metaKey;
+      const shouldSubmit =
+        event.key === 'Enter' &&
+        !event.shiftKey &&
+        !isModifierPressed &&
+        !event.nativeEvent.isComposing;
+
+      if (!shouldSubmit) {
+        return undefined;
+      }
+
+      event.preventDefault();
+
+      if (isRequesting || !inputValue.trim()) {
+        return false;
+      }
+
+      handleSenderSubmit(inputValue);
+      return false;
+    },
+    [handleSenderSubmit, inputValue, isRequesting],
+  );
   return (
     <PageContainer
       ghost
+      title={
+        <Space size={8}>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => history.push('/welcome')}
+            aria-label="返回首页"
+          />
+          <span>AI 智能体对话</span>
+        </Space>
+      }
       childrenContentStyle={{
         paddingBlock: 0,
         height: 'calc(100vh - 160px)',
@@ -289,7 +350,7 @@ const ChatbotPage: React.FC = () => {
           },
         }}
       >
-        <XProvider>
+        <XProvider locale={X_SENDER_LOCALE as any}>
           <div className={styles.layout}>
             <div className={styles.sidebar}>
               <Conversations
@@ -327,6 +388,12 @@ const ChatbotPage: React.FC = () => {
                     >
                       这里是前端智能体联调工作台。可以直接输入问题，验证结构化消息、执行态更新、表单和动作编排链路。
                     </Typography.Paragraph>
+                    <Button
+                      icon={<CompassOutlined />}
+                      onClick={() => history.push('/chatbot/demo')}
+                    >
+                      进入 Demo 页面
+                    </Button>
                   </div>
                 )}
                 {showMockToolbar && (
@@ -366,11 +433,11 @@ const ChatbotPage: React.FC = () => {
                   onChange={setInputValue}
                   loading={isRequesting}
                   onSubmit={handleSenderSubmit}
+                  onKeyDown={handleSenderKeyDown}
                   onCancel={abort}
-                  placeholder={`输入消息，按 Enter 发送，当前返回 ${currentMockTypeLabel}...`}
-                  autoSize={{ minRows: 4, maxRows: 8 }}
-                  style={{ width: '100%' }}
-                  styles={{ input: { paddingBlock: 0 } }}
+                  placeholder={senderPlaceholder}
+                  rootClassName={styles.chatSender}
+                  autoSize={{ minRows: 2, maxRows: 6 }}
                 />
               </div>
             </div>

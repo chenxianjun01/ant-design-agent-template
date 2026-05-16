@@ -41,7 +41,6 @@ const ImageMessage: React.FC<MessageComponentProps> = ({
             <Card
               key={image.key ?? `${index}-${image.url}`}
               size="small"
-              style={{ width: 240 }}
               bodyStyle={{ padding: 12 }}
             >
               <Space orientation="vertical" size={8} style={{ width: '100%' }}>

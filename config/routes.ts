@@ -50,6 +50,18 @@ export default [
     component: './Welcome',
   },
   {
+    path: '/chatbot',
+    name: 'chatbot',
+    icon: 'robot',
+    component: './chatbot',
+  },
+  {
+    path: '/chatbot/demo',
+    name: 'chatbot-demo',
+    icon: 'appstore',
+    component: './chatbot/demo',
+  },
+  {
     path: '/admin',
     name: 'admin',
     icon: 'crown',
@@ -279,12 +291,6 @@ export default [
         component: './account/settings',
       },
     ],
-  },
-  {
-    path: '/chatbot',
-    name: 'chatbot',
-    icon: 'robot',
-    component: './chatbot',
   },
   {
     path: '/',
