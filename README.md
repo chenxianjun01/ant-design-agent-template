@@ -26,6 +26,7 @@ Language: 🇺🇸 | [🇨🇳](./README.zh-CN.md)
 ## Project Preview
 
 ![AI 智能体对话界面预览](./public/images/agent-ui.png)
+![AI 智能体 DSL 能力预览](./public/images/agent-dsl.png)
 
 ## Features
 
